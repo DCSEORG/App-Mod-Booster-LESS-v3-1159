@@ -3,6 +3,10 @@ src/*/bin/
 src/*/obj/
 src/*/publish/
 src/*/app.zip
+app/bin/
+app/obj/
+app/publish/
+# app.zip is intentionally NOT excluded (per prompt-009)
 
 # Python
 __pycache__/
