@@ -20,6 +20,18 @@ echo "Location       : ${LOCATION}"
 echo "Admin Login    : ${ADMIN_LOGIN}"
 echo ""
 
+# Validate placeholder values have been replaced
+if [[ "${ADMIN_OBJECT_ID}" == "<your-entra-id-object-id>" ]]; then
+    echo "ERROR: ADMIN_OBJECT_ID has not been configured in AgentVariables.sh."
+    echo "       Run: az ad signed-in-user show --query id -o tsv"
+    exit 1
+fi
+if [[ "${ADMIN_LOGIN}" == "<your-entra-id-upn>" ]]; then
+    echo "ERROR: ADMIN_LOGIN has not been configured in AgentVariables.sh."
+    echo "       Run: az account show --query user.name -o tsv"
+    exit 1
+fi
+
 # ── 1. Create resource group ─────────────────────────────────────────────────
 echo "[1/5] Creating resource group: ${RESOURCE_GROUP} ..."
 az group create \

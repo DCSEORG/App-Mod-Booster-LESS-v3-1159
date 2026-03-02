@@ -138,6 +138,7 @@
             }
             @if (e.StatusName == "Submitted")
             {
+                <!-- TODO: Replace hardcoded reviewedBy=2 with authenticated user ID when auth is implemented -->
                 <form method="post" style="display:inline">
                     <input type="hidden" name="expenseId" value="@e.ExpenseId" />
                     <input type="hidden" name="reviewedBy" value="2" />
