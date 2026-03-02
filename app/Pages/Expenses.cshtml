@@ -1,0 +1,203 @@
+@page
+@model ExpenseManagement.Pages.ExpensesModel
+@{
+    ViewData["Title"] = "Expenses";
+}
+
+<div class="page-header">
+    <h1>📋 Expenses</h1>
+    <a href="/Expenses?action=create" class="btn btn-primary">➕ New Expense</a>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+{
+    <div class="alert alert-warning">⚠️ @Model.ErrorMessage</div>
+}
+
+<!-- Filter bar -->
+<section class="filter-bar">
+    <form method="get">
+        <div class="filter-row">
+            <label>Status:
+                <select name="statusId" onchange="this.form.submit()">
+                    <option value="">All</option>
+                    @foreach (var s in Model.Statuses)
+                    {
+                        <option value="@s.StatusId" selected="@(Model.FilterStatusId == s.StatusId)">@s.StatusName</option>
+                    }
+                </select>
+            </label>
+            <label>User:
+                <select name="userId" onchange="this.form.submit()">
+                    <option value="">All</option>
+                    @foreach (var u in Model.Users)
+                    {
+                        <option value="@u.UserId" selected="@(Model.FilterUserId == u.UserId)">@u.UserName</option>
+                    }
+                </select>
+            </label>
+            <label>Category:
+                <select name="categoryId" onchange="this.form.submit()">
+                    <option value="">All</option>
+                    @foreach (var c in Model.Categories)
+                    {
+                        <option value="@c.CategoryId" selected="@(Model.FilterCategoryId == c.CategoryId)">@c.CategoryName</option>
+                    }
+                </select>
+            </label>
+            <button type="submit" class="btn">🔍 Filter</button>
+            <a href="/Expenses" class="btn btn-outline">✕ Clear</a>
+        </div>
+    </form>
+</section>
+
+<!-- Create / Edit form -->
+@if (Model.ShowForm)
+{
+    <section class="form-section">
+        <h2>@(Model.EditExpense != null ? "Edit Expense" : "New Expense")</h2>
+        <form method="post">
+            <input type="hidden" name="expenseId" value="@Model.EditExpense?.ExpenseId" />
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>Employee</label>
+                    <select name="userId" required>
+                        @foreach (var u in Model.Users)
+                        {
+                            <option value="@u.UserId" selected="@(Model.EditExpense?.UserId == u.UserId)">@u.UserName</option>
+                        }
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Category</label>
+                    <select name="categoryId" required>
+                        @foreach (var c in Model.Categories)
+                        {
+                            <option value="@c.CategoryId" selected="@(Model.EditExpense?.CategoryId == c.CategoryId)">@c.CategoryName</option>
+                        }
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Amount (£)</label>
+                    <input type="number" name="amountGbp" step="0.01" min="0.01"
+                           value="@(Model.EditExpense != null ? Model.EditExpense.AmountGBP.ToString("F2") : "")"
+                           placeholder="0.00" required />
+                </div>
+                <div class="form-group">
+                    <label>Expense Date</label>
+                    <input type="date" name="expenseDate"
+                           value="@(Model.EditExpense != null ? Model.EditExpense.ExpenseDate.ToString("yyyy-MM-dd") : DateTime.Today.ToString("yyyy-MM-dd"))"
+                           required />
+                </div>
+                <div class="form-group form-full">
+                    <label>Description</label>
+                    <textarea name="description" rows="3" placeholder="Brief description…">@Model.EditExpense?.Description</textarea>
+                </div>
+                <div class="form-group form-full">
+                    <label>Receipt Reference</label>
+                    <input type="text" name="receiptFile" value="@Model.EditExpense?.ReceiptFile" placeholder="/receipts/…" />
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="submit" name="formAction" value="save" class="btn btn-primary">💾 Save</button>
+                <a href="/Expenses" class="btn btn-outline">Cancel</a>
+            </div>
+        </form>
+    </section>
+}
+
+<!-- Expense detail view -->
+@if (Model.DetailExpense != null)
+{
+    var e = Model.DetailExpense;
+    <section class="detail-section">
+        <h2>Expense #@e.ExpenseId</h2>
+        <dl class="detail-grid">
+            <dt>Employee</dt><dd>@e.UserName</dd>
+            <dt>Category</dt><dd>@e.CategoryName</dd>
+            <dt>Amount</dt><dd>£@e.AmountGBP.ToString("N2")</dd>
+            <dt>Status</dt><dd><span class="badge badge-@e.StatusName.ToLower()">@e.StatusName</span></dd>
+            <dt>Date</dt><dd>@e.ExpenseDate.ToString("dd MMM yyyy")</dd>
+            <dt>Description</dt><dd>@(e.Description ?? "—")</dd>
+            <dt>Receipt</dt><dd>@(e.ReceiptFile ?? "—")</dd>
+            @if (e.SubmittedAt.HasValue) { <dt>Submitted</dt><dd>@e.SubmittedAt.Value.ToString("dd MMM yyyy HH:mm")</dd> }
+            @if (e.ReviewedByName != null) { <dt>Reviewed By</dt><dd>@e.ReviewedByName on @e.ReviewedAt?.ToString("dd MMM yyyy HH:mm")</dd> }
+        </dl>
+        <div class="form-actions">
+            @if (e.StatusName == "Draft")
+            {
+                <form method="post" style="display:inline">
+                    <input type="hidden" name="expenseId" value="@e.ExpenseId" />
+                    <button type="submit" name="formAction" value="submit" class="btn btn-warning">📤 Submit for Review</button>
+                </form>
+                <a href="/Expenses?action=edit&expenseId=@e.ExpenseId" class="btn">✏️ Edit</a>
+                <form method="post" style="display:inline" onsubmit="return confirm('Delete this expense?')">
+                    <input type="hidden" name="expenseId" value="@e.ExpenseId" />
+                    <button type="submit" name="formAction" value="delete" class="btn btn-danger">🗑️ Delete</button>
+                </form>
+            }
+            @if (e.StatusName == "Submitted")
+            {
+                <!-- TODO: Replace hardcoded reviewedBy=2 with authenticated user ID when auth is implemented -->
+                <form method="post" style="display:inline">
+                    <input type="hidden" name="expenseId" value="@e.ExpenseId" />
+                    <input type="hidden" name="reviewedBy" value="2" />
+                    <button type="submit" name="formAction" value="approve" class="btn btn-success">✅ Approve</button>
+                </form>
+                <form method="post" style="display:inline">
+                    <input type="hidden" name="expenseId" value="@e.ExpenseId" />
+                    <input type="hidden" name="reviewedBy" value="2" />
+                    <button type="submit" name="formAction" value="reject" class="btn btn-danger">❌ Reject</button>
+                </form>
+            }
+            <a href="/Expenses" class="btn btn-outline">← Back</a>
+        </div>
+    </section>
+}
+
+<!-- Expense list -->
+@if (!Model.ShowForm && Model.DetailExpense == null)
+{
+    <section class="table-section">
+        @if (Model.Expenses.Any())
+        {
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Employee</th>
+                        <th>Category</th>
+                        <th>Amount</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var e in Model.Expenses)
+                    {
+                        <tr>
+                            <td>@e.ExpenseId</td>
+                            <td>@e.UserName</td>
+                            <td>@e.CategoryName</td>
+                            <td>£@e.AmountGBP.ToString("N2")</td>
+                            <td><span class="badge badge-@e.StatusName.ToLower()">@e.StatusName</span></td>
+                            <td>@e.ExpenseDate.ToString("dd MMM yyyy")</td>
+                            <td>
+                                <a href="/Expenses?expenseId=@e.ExpenseId" class="btn btn-sm">View</a>
+                                @if (e.StatusName == "Draft")
+                                {
+                                    <a href="/Expenses?action=edit&expenseId=@e.ExpenseId" class="btn btn-sm">Edit</a>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <p class="empty-state">No expenses match your filters. <a href="/Expenses?action=create">Create one?</a></p>
+        }
+    </section>
+}

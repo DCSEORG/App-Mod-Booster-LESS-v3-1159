@@ -1,0 +1,131 @@
+@page
+@model ExpenseManagement.Pages.IndexModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="page-header">
+    <h1>📊 Dashboard</h1>
+    <p class="subtitle">Expense Management System – Overview</p>
+</div>
+
+@if (!string.IsNullOrEmpty(Model.ErrorMessage))
+{
+    <div class="alert alert-warning">
+        <strong>⚠️ Demo Mode</strong> – @Model.ErrorMessage
+    </div>
+}
+
+<!-- Quick Actions -->
+<section class="quick-actions">
+    <h2>Quick Actions</h2>
+    <div class="action-grid">
+        <a href="/Expenses?action=create" class="action-card action-primary">
+            <span class="action-icon">➕</span>
+            <span class="action-label">New Expense</span>
+        </a>
+        <a href="/Expenses" class="action-card">
+            <span class="action-icon">📋</span>
+            <span class="action-label">All Expenses</span>
+        </a>
+        <a href="/Expenses?statusId=2" class="action-card action-warning">
+            <span class="action-icon">⏳</span>
+            <span class="action-label">Pending Review</span>
+        </a>
+        <a href="/Users" class="action-card">
+            <span class="action-icon">👥</span>
+            <span class="action-label">Manage Users</span>
+        </a>
+        <a href="/swagger" target="_blank" class="action-card action-info">
+            <span class="action-icon">🔌</span>
+            <span class="action-label">API Docs</span>
+        </a>
+    </div>
+</section>
+
+<!-- Summary by status -->
+@if (Model.Summary.Any())
+{
+    <section class="summary-section">
+        <h2>Expense Summary</h2>
+        <div class="summary-grid">
+            @foreach (var s in Model.Summary)
+            {
+                <div class="summary-card summary-@s.StatusName.ToLower()">
+                    <div class="summary-count">@s.ExpenseCount</div>
+                    <div class="summary-label">@s.StatusName</div>
+                    <div class="summary-total">£@s.TotalGBP.ToString("N2")</div>
+                </div>
+            }
+        </div>
+    </section>
+}
+
+<!-- Category breakdown -->
+@if (Model.CategoryBreakdown.Any())
+{
+    <section class="summary-section">
+        <h2>Spending by Category</h2>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Category</th>
+                    <th>Count</th>
+                    <th>Total (£)</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var c in Model.CategoryBreakdown)
+                {
+                    <tr>
+                        <td>@c.CategoryName</td>
+                        <td>@c.ExpenseCount</td>
+                        <td>£@c.TotalGBP.ToString("N2")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </section>
+}
+
+<!-- Recent expenses -->
+<section class="summary-section">
+    <h2>Recent Expenses</h2>
+    @if (Model.RecentExpenses.Any())
+    {
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Employee</th>
+                    <th>Category</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var e in Model.RecentExpenses)
+                {
+                    <tr>
+                        <td>@e.ExpenseId</td>
+                        <td>@e.UserName</td>
+                        <td>@e.CategoryName</td>
+                        <td>£@e.AmountGBP.ToString("N2")</td>
+                        <td><span class="badge badge-@e.StatusName.ToLower()">@e.StatusName</span></td>
+                        <td>@e.ExpenseDate.ToString("dd MMM yyyy")</td>
+                        <td>
+                            <a href="/Expenses?expenseId=@e.ExpenseId" class="btn btn-sm">View</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        <p><a href="/Expenses" class="btn btn-outline">View all expenses →</a></p>
+    }
+    else
+    {
+        <p class="empty-state">No expenses found. <a href="/Expenses?action=create">Create your first expense.</a></p>
+    }
+</section>

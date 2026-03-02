@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] – Expense Management</title>
+    <link rel="stylesheet" href="~/css/site.css" />
+</head>
+<body>
+    <header class="site-header">
+        <nav class="navbar">
+            <a class="brand" href="/Index">💼 Expense Management</a>
+            <ul class="nav-links">
+                <li><a href="/Index">Dashboard</a></li>
+                <li><a href="/Expenses">Expenses</a></li>
+                <li><a href="/Users">Users</a></li>
+                <li><a href="/swagger" target="_blank">API Docs</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container">
+        @RenderBody()
+    </main>
+
+    <footer class="site-footer">
+        <p>Expense Management System &copy; @DateTime.Now.Year</p>
+    </footer>
+</body>
+</html>
